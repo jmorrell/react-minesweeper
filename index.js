@@ -4,6 +4,7 @@ var React = require('react');
 
 var Cell = require('./src/Cell');
 var CellState = require('./src/CellState');
+var Display = require('./src/Display');
 
 var generateBoard = require('./src/generateBoard');
 var getNeighbors = require('./src/getNeighbors');
@@ -144,10 +145,12 @@ var Styles = {
   },
 };
 
+// <Board board={board} />
+
 function render() {
   React.render(
     <div>
-      <Board board={board} />
+      <Display/>
     </div>,
     document.body
   );
