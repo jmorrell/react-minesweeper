@@ -5,6 +5,17 @@ var React = require('react');
 var CellState = require('./CellState');
 
 var CELL_SIZE = 20;
+// http://en.wikipedia.org/wiki/Minesweeper_%28video_game%29#Trivia
+var NEIGHBOR_BOMB_COUNT_COLOR_MAP = {
+  1: 'blue',
+  2: 'green',
+  3: 'red',
+  4: 'purple', // or 'darkblue'
+  5: 'maroon',
+  6: 'cyan',
+  7: 'black',
+  8: 'grey',
+};
 
 function styles() {
   var args = [].slice.call(arguments);
@@ -100,9 +111,11 @@ var ExposedCell = React.createClass({
       return <EmptyCell/>;
     }
 
+    var color = NEIGHBOR_BOMB_COUNT_COLOR_MAP[this.props.cell.neighborBombCount]
+
     return (
       <div style={style} onClick={this.props.onExpose}>
-        <span style={Styles.Count}>
+        <span style={styles(Styles.Count, {color})}>
           {this.props.cell.neighborBombCount}
         </span>
       </div>
