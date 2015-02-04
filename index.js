@@ -1,10 +1,10 @@
 
 var extend = require('extend-object');
 var React = require('react');
+var SegmentDisplay = require('react-segment-display');
 
 var Cell = require('./src/Cell');
 var CellState = require('./src/CellState');
-var Display = require('./src/Display');
 
 var generateBoard = require('./src/generateBoard');
 var getNeighbors = require('./src/getNeighbors');
@@ -46,6 +46,7 @@ var Actions = {
       return;
     }
     markCell(board, i, j);
+    render();
   },
   CLICK_CELL: function({i, j}) {
     if (board.isGameOver) {
@@ -143,14 +144,38 @@ var Styles = {
     msUserSelect: 'none',
     userSelect: 'none',
   },
+  SegmentDisplay: {
+    backgroundColor: 'black',
+    borderRadius: 2,
+    padding: 2,
+  },
 };
 
-// <Board board={board} />
+function flaggedCount(board) {
+  return board.data.reduce((count, row) => {
+    return count + row.filter(isFlagged).length
+  }, 0)
+}
+
+function isFlagged(x) {
+  return x.state === CellState.FLAGGED
+}
 
 function render() {
   React.render(
     <div>
-      <Display/>
+      <div style={Styles.DisplayContainer}>
+      <SegmentDisplay
+         value={NUM_BOMBS - flaggedCount(board)}
+         bevelWidth={0}
+         widht={20}
+         height={40}
+         opacity={0.4}
+         style={Styles.SegmentDisplay}
+         pad={3}
+         />
+      </div>
+      <Board board={board} />
     </div>,
     document.body
   );
