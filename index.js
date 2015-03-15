@@ -1,5 +1,6 @@
 var React = require('react');
 var {Record, Set} = require('immutable');
+var SegmentDisplay = require('react-segment-display');
 
 var Cell = require('./src/Cell');
 var CellState = require('./src/CellState');
@@ -136,11 +137,37 @@ var Styles = {
     msUserSelect: 'none',
     userSelect: 'none',
   },
+  SegmentDisplay: {
+    backgroundColor: 'black',
+    borderRadius: 2,
+    padding: 2,
+  },
 };
+
+function flaggedCount(board) {
+  return board.data.reduce((count, cell) => {
+    return count + isFlagged(cell);
+  }, 0)
+}
+
+function isFlagged(x) {
+  return x.state === CellState.FLAGGED
+}
 
 function render() {
   React.render(
     <div>
+      <div style={Styles.DisplayContainer}>
+      <SegmentDisplay
+         value={NUM_BOMBS - flaggedCount(board)}
+         bevelWidth={0}
+         widht={20}
+         height={40}
+         opacity={0.4}
+         style={Styles.SegmentDisplay}
+         pad={3}
+       />
+      </div>
       <Board board={board} />
     </div>,
     document.body
