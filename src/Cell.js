@@ -1,20 +1,24 @@
 var extend = require('extend-object');
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var React = require('react');
+var {PropTypes} = React;
 
 var CellState = require('./CellState');
 
 var CELL_SIZE = 20;
+
 // http://en.wikipedia.org/wiki/Minesweeper_%28video_game%29#Trivia
-var NEIGHBOR_BOMB_COUNT_COLOR_MAP = {
-  1: 'blue',
-  2: 'green',
-  3: 'red',
-  4: 'purple', // or 'darkblue'
-  5: 'maroon',
-  6: 'cyan',
-  7: 'black',
-  8: 'grey',
-};
+var NEIGHBOR_BOMB_COUNT_COLOR_MAP = [
+  'black',
+  'blue',
+  'green',
+  'red',
+  'purple',
+  'maroon',
+  'cyan',
+  'black',
+  'grey',
+];
 
 function styles() {
   var args = [].slice.call(arguments);
@@ -24,6 +28,10 @@ function styles() {
 }
 
 var EmptyCell = React.createClass({
+  shouldComponentUpdate() {
+    return false;
+  },
+
   render() {
     return (
       <div style={styles(Styles.CellBase, Styles.EmptyCell)}/>
@@ -32,6 +40,10 @@ var EmptyCell = React.createClass({
 });
 
 var CoveredCell = React.createClass({
+  shouldComponentUpdate() {
+    return false;
+  },
+
   render() {
     if (this.props.isPressed) {
       return <EmptyCell/>;
@@ -47,6 +59,10 @@ var CoveredCell = React.createClass({
 });
 
 var FlaggedCell = React.createClass({
+  shouldComponentUpdate() {
+    return false;
+  },
+
   render() {
     var style = styles(
       Styles.CellBase,
@@ -63,6 +79,10 @@ var FlaggedCell = React.createClass({
 });
 
 var BombCell = React.createClass({
+  shouldComponentUpdate() {
+    return false;
+  },
+
   render() {
     var style = styles(
       Styles.CellBase,
@@ -79,6 +99,10 @@ var BombCell = React.createClass({
 });
 
 var ExplodedCell = React.createClass({
+  shouldComponentUpdate() {
+    return false;
+  },
+
   render() {
     var style = styles(
       Styles.CellBase,
@@ -92,12 +116,14 @@ var ExplodedCell = React.createClass({
         <img style={Styles.flag} src="img/bomb.png" />
       </div>
     );
-  }
+  },
 });
 
 var ExposedCell = React.createClass({
+  mixins: [PureRenderMixin],
+
   propTypes: {
-    cell: React.PropTypes.object.isRequired
+    cell: PropTypes.object.isRequired
   },
 
   render() {
@@ -123,15 +149,17 @@ var ExposedCell = React.createClass({
 });
 
 var Cell = React.createClass({
+  mixins: [PureRenderMixin],
+
   propTypes: {
-    cell: React.PropTypes.object.isRequired,
-    bombCount: React.PropTypes.number.isRequired,
-    isPressed: React.PropTypes.bool.isRequired,
-    onSelect: React.PropTypes.func.isRequired,
-    onPress: React.PropTypes.func.isRequired,
-    onUnpress: React.PropTypes.func.isRequired,
-    onMark: React.PropTypes.func.isRequired,
-    onExpose: React.PropTypes.func.isRequired,
+    cell: PropTypes.object.isRequired,
+    bombCount: PropTypes.number.isRequired,
+    isPressed: PropTypes.bool.isRequired,
+    onSelect: PropTypes.func.isRequired,
+    onPress: PropTypes.func.isRequired,
+    onUnpress: PropTypes.func.isRequired,
+    onMark: PropTypes.func.isRequired,
+    onExpose: PropTypes.func.isRequired,
   },
 
   render() {
@@ -211,14 +239,11 @@ var Cell = React.createClass({
 });
 
 var Styles = {
-  CellWrapper: {
-    position: 'absolute',
-  },
   CellBase: {
     boxSizing: 'border-box',
     height: CELL_SIZE,
     width: CELL_SIZE,
-    webkitUserSelect: 'none',
+    WebkitUserSelect: 'none',
     userSelect: 'none',
   },
   CoveredCell: {

@@ -1,16 +1,12 @@
 var {Record, Set} = require('immutable');
 
-var CellState = require('./CellState');
 var Board = require('./Board');
+var CellState = require('./CellState');
+var Location = require('./Location');
 
 var Cell = Record({
   state: CellState.HIDDEN,
   hasBomb: false,
-  x: 0,
-  y: 0,
-});
-
-var Location = Record({
   x: 0,
   y: 0,
 });

@@ -17,7 +17,7 @@
   "dependencies": {
     "extend-object": "^1.0.0",
     "immutable": "^3.6.2",
-    "react": "^0.12.2",
+    "react": "^0.13.0",
     "react-segment-display": "^1.0.0"
   }
 }

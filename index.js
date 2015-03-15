@@ -1,14 +1,13 @@
 var React = require('react');
-var {Record, Set} = require('immutable');
+var PureRenderMixin = require('react/addons').addons.PureRenderMixin;
 var SegmentDisplay = require('react-segment-display');
+var {Set} = require('immutable');
 
 var Cell = require('./src/Cell');
 var CellState = require('./src/CellState');
+var Location = require('./src/Location');
 
-var Location = Record({
-  x: 0,
-  y: 0,
-});
+var getNeighborIndices = require('./src/getNeighborIndices');
 
 var {
   clearCell,
@@ -87,6 +86,8 @@ var Actions = {
 };
 
 var Board = React.createClass({
+  mixins: [PureRenderMixin],
+
   render() {
     return (
       <div style={Styles.Board}>
@@ -96,18 +97,20 @@ var Board = React.createClass({
   },
 
   _renderCells() {
+    var {board, pressed} = this.props;
     var gameOver = isGameOver(board);
 
-    return this.props.board.data.map(cell => {
+    return board.data.map(cell => {
       var {x, y} = cell;
       var top = x * CELL_SIZE;
       var left = y * CELL_SIZE;
       var location = new Location({x, y});
 
       return (
-        <div style={{top, left, position: 'absolute'}}>
+        <div
+          key={`${x}-${y}`}
+          style={{top, left, position: 'absolute'}}>
           <Cell
-            key={`${x}-${y}`}
             cell={cell}
             bombCount={getNeighborBombCount(this.props.board, x, y)}
             isPressed={pressed.contains(location)}
@@ -131,10 +134,10 @@ var Styles = {
     position: 'relative',
     width: CELL_SIZE * WIDTH,
     height: CELL_SIZE * HEIGHT,
-    webkitTouchCallout: 'none',
-    webkitUserSelect: 'none',
-    mozUserSelect: 'none',
-    msUserSelect: 'none',
+    WebkitTouchCallout: 'none',
+    WebkitUserSelect: 'none',
+    MozUserSelect: 'none',
+    MsUserSelect: 'none',
     userSelect: 'none',
   },
   SegmentDisplay: {
@@ -145,9 +148,9 @@ var Styles = {
 };
 
 function flaggedCount(board) {
-  return board.data.reduce((count, cell) => {
-    return count + isFlagged(cell);
-  }, 0)
+  return board.data
+    .map(cell => cell.state === CellState.FLAGGED ? 1 : 0)
+    .reduce((a, b) => a + b);
 }
 
 function isFlagged(x) {
@@ -168,7 +171,7 @@ function render() {
          pad={3}
        />
       </div>
-      <Board board={board} />
+      <Board board={board} pressed={pressed} />
     </div>,
     document.body
   );
