@@ -1,65 +1,83 @@
-
-var extend = require('extend-object');
 var React = require('react');
+var {Record, Set} = require('immutable');
 
 var Cell = require('./src/Cell');
 var CellState = require('./src/CellState');
-var Display = require('./src/Display');
 
-var generateBoard = require('./src/generateBoard');
-var getNeighbors = require('./src/getNeighbors');
-var playMove = require('./src/playMove');
-var markCell = require('./src/markCell');
-var exposeCell = require('./src/exposeCell');
+var Location = Record({
+  x: 0,
+  y: 0,
+});
+
+var {
+  clearCell,
+  generateBoard,
+  getNeighborBombCount,
+  isGameOver,
+  markCell,
+  playMove,
+} = require('./src/Game');
 
 var HEIGHT = 10;
-var WIDTH = 10;
-var NUM_BOMBS = 10;
+var WIDTH = 20;
+var NUM_BOMBS = 25;
 var CELL_SIZE = 20;
 
-var board = generateBoard(HEIGHT, WIDTH, NUM_BOMBS);
+window.board = generateBoard(HEIGHT, WIDTH, NUM_BOMBS);
+var pressed = Set();
 
-function styles() {
-  var args = [].slice.call(arguments);
-  args = args.filter(function(x) { return !!x; });
-  args.push({});
-  return extend.apply(null, args);
+function getNeighborIndices(x, y) {
+  return [
+    [x - 1, y],
+    [x + 1, y],
+    [x, y - 1],
+    [x, y + 1],
+    [x - 1, y - 1],
+    [x - 1, y + 1],
+    [x + 1, y - 1],
+    [x + 1, y + 1],
+  ];
 }
 
 var Actions = {
-  PRESS_CELL: function({i, j}) {
-    if (board.isGameOver) {
-      return;
+  PRESS_CELL: function(x, y, cell) {
+    if (!isGameOver(board)) {
+      switch(cell.state) {
+        case CellState.HIDDEN:
+          pressed = pressed.add(new Location({x, y}));
+          break;
+        case CellState.EXPOSED:
+          getNeighborIndices(x, y).forEach(([i, j]) => {
+            pressed = pressed.add(new Location({x: i, y: j}));
+          });
+          break;
+      }
+      render();
     }
-    board.pressedCell = [i, j];
-    render();
   },
-  UNPRESS_CELL: function() {
-    if (board.isGameOver) {
-      return;
+  UNPRESS_CELL: function(x, y, cell) {
+    if (!isGameOver(board)) {
+      pressed = pressed.clear();
+      render();
     }
-    board.pressedCell = null;
-    render();
   },
-  MARK_CELL: function({i, j}) {
-    if (board.isGameOver) {
-      return;
+  MARK_CELL: function(x, y, cell) {
+    if (!isGameOver(board)) {
+      board = markCell(board, x, y);
+      render();
     }
-    markCell(board, i, j);
   },
-  CLICK_CELL: function({i, j}) {
-    if (board.isGameOver) {
-      return;
+  CLICK_CELL: function(x, y, cell) {
+    if (!isGameOver(board)) {
+      board = playMove(board, x, y);
+      render();
     }
-    playMove(board, i, j);
-    render();
   },
-  EXPOSE_CELL: function({i, j}) {
-    if (board.isGameOver) {
-      return;
+  CLEAR_CELL: function(x, y, cell) {
+    if (!isGameOver(board)) {
+      board = clearCell(board, x, y);
+      render();
     }
-    exposeCell(board, i, j);
-    render();
   },
   RESTART_GAME: function() {
     board = generateBoard(HEIGHT, WIDTH, NUM_BOMBS);
@@ -68,69 +86,44 @@ var Actions = {
 };
 
 var Board = React.createClass({
-  render: function() {
-    var cells = [];
-
-    this.props.board.data.forEach((row, i) => {
-      row.forEach((cell, j) => {
-        var isPressed = !!(
-          this.props.board.pressedCell &&
-          this.props.board.pressedCell[0] === i &&
-          this.props.board.pressedCell[1] === j
-        );
-
-        cells.push(
-          <Cell
-            key={`${i}-${j}`}
-            i={i}
-            j={j}
-            cell={cell}
-            isPressed={isPressed}
-            isGameOver={this.props.board.isGameOver}
-            onSelect={() => { Actions.CLICK_CELL({i, j}); }}
-            onPress={() => { Actions.PRESS_CELL({i, j}); }}
-            onUnpress={() => { Actions.UNPRESS_CELL({i, j}); }}
-            onMark={() => { Actions.MARK_CELL({i, j}); }}
-            onExpose={() => { Actions.EXPOSE_CELL({i, j}); }}
-          />
-        );
-      });
-    });
-
+  render() {
     return (
-      <div style={styles(Styles.Board)}>
-        {cells}
+      <div style={Styles.Board}>
+        {this._renderCells()}
       </div>
     );
-  }
+  },
+
+  _renderCells() {
+    var gameOver = isGameOver(board);
+
+    return this.props.board.data.map(cell => {
+      var {x, y} = cell;
+      var top = x * CELL_SIZE;
+      var left = y * CELL_SIZE;
+      var location = new Location({x, y});
+
+      return (
+        <div style={{top, left, position: 'absolute'}}>
+          <Cell
+            key={`${x}-${y}`}
+            cell={cell}
+            bombCount={getNeighborBombCount(this.props.board, x, y)}
+            isPressed={pressed.contains(location)}
+            isGameOver={gameOver}
+            onSelect={() => { Actions.CLICK_CELL(x, y, cell); }}
+            onPress={() => { Actions.PRESS_CELL(x, y, cell); }}
+            onUnpress={() => { Actions.UNPRESS_CELL(x, y, cell); }}
+            onMark={() => { Actions.MARK_CELL(x, y, cell); }}
+            onExpose={() => { Actions.CLEAR_CELL(x, y, cell); }}
+          />
+        </div>
+      )
+    });
+  },
 });
 
-
 var Styles = {
-  CellBase: {
-    boxSizing: 'border-box',
-    height: CELL_SIZE,
-    width: CELL_SIZE,
-    display: 'inline-block',
-    borderStyle: 'solid',
-    borderWidth: 1,
-  },
-  CellEmpty: {
-    backgroundColor: 'white',
-  },
-  CellHidden: {
-    backgroundColor: 'gray',
-  },
-  CellExposed: {
-    backgroundColor: 'blue',
-  },
-  CountContainer: {
-    boxSizing: 'border-box',
-    height: CELL_SIZE,
-    width: CELL_SIZE,
-    padding: 7,
-    color: 'white',
-  },
   Board: {
     borderStyle: 'solid',
     borderWidth: 5,
@@ -145,12 +138,10 @@ var Styles = {
   },
 };
 
-// <Board board={board} />
-
 function render() {
   React.render(
     <div>
-      <Display/>
+      <Board board={board} />
     </div>,
     document.body
   );

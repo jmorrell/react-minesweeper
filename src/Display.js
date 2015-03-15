@@ -1,13 +1,27 @@
 
-var extend = require('extend-object');
 var React = require('react');
 
-function styles() {
-  var args = [].slice.call(arguments);
-  args = args.filter(function(x) { return !!x; });
-  args.unshift({});
-  return extend.apply(null, args);
+function styles(...args) {
+  return args
+    .filter(x => x)
+    .reduce((a, b) => {
+      return { ...a, ...b };
+    }, {});
 }
+
+var base = {height: 8, width: 17, color: 'red'};
+
+var DigitMiddleBar = React.createClass({
+  render() {
+    return (
+      <div style={this.props.style}>
+        <div style={styles(Styles.DigitMiddleBarBefore)}/>
+        <div style={styles(Styles.DigitMiddleBarCenter)}/>
+        <div style={styles(Styles.DigitMiddleBarAfter)}/>
+      </div>
+    );
+  }
+});
 
 var Digit = React.createClass({
   render() {
@@ -34,6 +48,11 @@ var Digit = React.createClass({
           top: base.width * 2 + 2,
           left: base.width + base.height
         })}/>
+        <DigitMiddleBar style={{
+          position: 'absolute',
+          top: 32,
+          left: 1
+        }} />
         <div style={styles(trapezoidStyles.bottom, {
           top: base.width * 4 - 5,
         })}/>
@@ -72,20 +91,52 @@ function generateTrapezoidStyles({
   };
 }
 
-function generateCenterPieceStyles({
+function generateMiddleHexagonStyles({
   width,
   height,
   color,
 }) {
-  return {};
+  return {
+    position: 'absolute',
+    height,
+    width,
+    backgroundColor: color,
+  };
 }
 
 var Styles = {
   Digit: {
     position: 'relative',
   },
-  CenterPiece: {
-
+  DigitMiddleBarBefore: {
+    float: 'left',
+    borderRightWidth: 8,
+    borderRightStyle: 'solid',
+    borderRightColor: base.color,
+    borderTopWidth: base.height / 2,
+    borderTopStyle: 'solid',
+    borderTopColor: 'transparent',
+    borderBottomWidth: base.height / 2,
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'transparent',
+  },
+  DigitMiddleBarCenter: {
+    float: 'left',
+    width: base.width - 2,
+    height: base.height,
+    backgroundColor: base.color,
+  },
+  DigitMiddleBarAfter: {
+    float: 'left',
+    borderLeftWidth: 8,
+    borderLeftStyle: 'solid',
+    borderLeftColor: base.color,
+    borderTopWidth: base.height / 2,
+    borderTopStyle: 'solid',
+    borderTopColor: 'transparent',
+    borderBottomWidth: base.height / 2,
+    borderBottomStyle: 'solid',
+    borderBottomColor: 'transparent',
   },
 };
 

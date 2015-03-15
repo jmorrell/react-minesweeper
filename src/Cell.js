@@ -1,4 +1,3 @@
-
 var extend = require('extend-object');
 var React = require('react');
 
@@ -96,14 +95,14 @@ var ExposedCell = React.createClass({
       Styles.EmptyCell
     );
 
-    if (!this.props.cell.neighborBombCount) {
+    if (!this.props.bombCount) {
       return <EmptyCell/>;
     }
 
     return (
       <div style={style} onClick={this.props.onExpose}>
         <span style={Styles.Count}>
-          {this.props.cell.neighborBombCount}
+          {this.props.bombCount}
         </span>
       </div>
     );
@@ -112,9 +111,8 @@ var ExposedCell = React.createClass({
 
 var Cell = React.createClass({
   propTypes: {
-    i: React.PropTypes.number.isRequired,
-    j: React.PropTypes.number.isRequired,
     cell: React.PropTypes.object.isRequired,
+    bombCount: React.PropTypes.number.isRequired,
     isPressed: React.PropTypes.bool.isRequired,
     onSelect: React.PropTypes.func.isRequired,
     onPress: React.PropTypes.func.isRequired,
@@ -124,11 +122,8 @@ var Cell = React.createClass({
   },
 
   render() {
-    var left = this.props.i * CELL_SIZE;
-    var top = this.props.j * CELL_SIZE;
-    var style = styles({top, left}, Styles.CellWrapper);
-
     var cell = null;
+
     switch(this.props.cell.state) {
       case CellState.HIDDEN:
         if (this.props.isGameOver) {
@@ -155,7 +150,6 @@ var Cell = React.createClass({
 
     return (
       <div
-        style={style}
         onMouseDown={this._onMouseDown}
         onMouseUp={this._onMouseUp}
         onMouseEnter={this._onMouseEnter}
